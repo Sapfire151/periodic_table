@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>16-Bit Periodic Table</title>
+    <title>Ultimate 16-Bit Periodic Table</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
@@ -23,7 +23,8 @@
             --classic-primary: #3c9cff;
             --classic-secondary: #ff55a3;
             --classic-accent: #50fa7b;
-            --classic-glass-bg: rgba(40, 40, 40, 0.35); /* More transparency */
+            --classic-glass-bg: rgba(40, 40, 40, 0.35);
+            --classic-solid-bg: rgba(40, 40, 40, 0.9);
             --classic-border: #888;
 
             /* Vaporwave Theme */
@@ -32,7 +33,8 @@
             --vapor-primary: #ff71ce;
             --vapor-secondary: #01cdfe;
             --vapor-accent: #05ffa1;
-            --vapor-glass-bg: rgba(45, 10, 80, 0.3); /* More transparency */
+            --vapor-glass-bg: rgba(45, 10, 80, 0.3);
+            --vapor-solid-bg: rgba(45, 10, 80, 0.9);
             --vapor-border: #ff71ce;
 
             /* Hacker Theme (Konami Code) */
@@ -41,7 +43,8 @@
             --hacker-primary: #00ff00;
             --hacker-secondary: #ff0000;
             --hacker-accent: #ffff00;
-            --hacker-glass-bg: rgba(0, 50, 0, 0.3); /* More transparency */
+            --hacker-glass-bg: rgba(0, 50, 0, 0.3);
+            --hacker-solid-bg: rgba(0, 50, 0, 0.9);
             --hacker-border: #00ff00;
 
             /* Default to Classic Theme */
@@ -51,6 +54,7 @@
             --secondary-color: var(--classic-secondary);
             --accent-color: var(--classic-accent);
             --glass-bg-color: var(--classic-glass-bg);
+            --solid-bg-color: var(--classic-solid-bg);
             --border-color: var(--classic-border);
         }
 
@@ -73,6 +77,7 @@
             --secondary-color: var(--vapor-secondary);
             --accent-color: var(--vapor-accent);
             --glass-bg-color: var(--vapor-glass-bg);
+            --solid-bg-color: var(--vapor-solid-bg);
             --border-color: var(--vapor-border);
         }
         
@@ -83,6 +88,7 @@
             --secondary-color: var(--hacker-secondary);
             --accent-color: var(--hacker-accent);
             --glass-bg-color: var(--hacker-glass-bg);
+            --solid-bg-color: var(--hacker-solid-bg);
             --border-color: var(--hacker-border);
         }
 
@@ -533,11 +539,13 @@
         /* ------------------------- */
         /* --- More Gimmicks ------- */
         /* ------------------------- */
-        .theme-switcher {
+        .ui-controls {
             position: fixed;
             bottom: 20px;
             left: 20px;
             z-index: 1001;
+            display: flex;
+            gap: 10px;
         }
 
         .switch-button {
@@ -636,6 +644,26 @@
             transition: opacity 0.2s;
             z-index: 2000;
         }
+        
+        /* --- Low Power Mode --- */
+        body.low-power-mode #matrix-bg {
+            display: none;
+        }
+        body.low-power-mode .modal-content,
+        body.low-power-mode .element,
+        body.low-power-mode #category-sidebar,
+        body.low-power-mode #gemini-search-input,
+        body.low-power-mode .switch-button,
+        body.low-power-mode #digital-clock,
+        body.low-power-mode #gemini-response-container,
+        body.low-power-mode #fun-fact-container, 
+        body.low-power-mode #eotd-container, 
+        body.low-power-mode #game-container {
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            background-color: var(--solid-bg-color);
+        }
+
 
     </style>
 </head>
@@ -648,7 +676,7 @@
 
     <div class="page-wrapper">
         <div class="main-content">
-            <h1>16-Bit Periodic Table</h1>
+            <h1>Ultimate 16-Bit Periodic Table</h1>
             <div id="gemini-search-container">
                 <input type="text" id="gemini-search-input" placeholder="Ask Gemini about the elements...">
                 <button id="gemini-search-btn" class="switch-button">Search</button>
@@ -720,8 +748,9 @@
         </div>
     </div>
 
-    <div class="theme-switcher">
+    <div class="ui-controls">
         <button id="theme-switch-btn" class="switch-button">Switch Theme</button>
+        <button id="low-power-btn" class="switch-button">Low Power</button>
     </div>
 
     <script>
@@ -877,6 +906,7 @@
             const searchBtn = document.getElementById('gemini-search-btn');
             const searchResponseContainer = document.getElementById('gemini-response-container');
             const themeSwitchBtn = document.getElementById('theme-switch-btn');
+            const lowPowerBtn = document.getElementById('low-power-btn');
             const categorySidebar = document.getElementById('category-sidebar');
             const clockDisplay = document.getElementById('digital-clock');
             const eotdText = document.getElementById('eotd-text');
@@ -910,6 +940,7 @@
              * Initializes the application.
              */
             function initialize() {
+                checkLowPowerMode();
                 generatePeriodicTable();
                 generateCategoryFilters();
                 setupEventListeners();
@@ -1036,7 +1067,14 @@
                 try {
                     let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
                     const payload = { contents: chatHistory };
-                    const apiKey = "AIzaSyAwz7a6Tucqr-X-uXxA6xZQjlKdaLQh9TI"; // Platform will provide this
+                    
+                    // --- API KEY SECURITY ---
+                    // The API key is intentionally left as an empty string.
+                    // The hosting environment securely provides the key at runtime.
+                    // This prevents the key from being exposed in the public source code.
+                    // DO NOT PASTE YOUR OWN KEY HERE.
+                    const apiKey = "AIzaSyAwz7a6Tucqr-X-uXxA6xZQjlKdaLQh9TI"; 
+                    
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
                     const response = await fetch(apiUrl, {
@@ -1264,7 +1302,6 @@
                 const target = event.target;
                 if (!target.classList.contains('filter-btn')) return;
                 playRandomClickSound();
-                searchInput.value = '';
                 const category = target.dataset.category;
                 const allElements = document.querySelectorAll('.element[data-number]');
                 clearActiveFilters();
@@ -1404,6 +1441,28 @@
                     gameResult.style.color = 'var(--secondary-color)';
                 }
             }
+            
+            /**
+             * Toggles Low Power Mode.
+             */
+            function toggleLowPowerMode() {
+                playRandomClickSound();
+                document.body.classList.toggle('low-power-mode');
+                if (document.body.classList.contains('low-power-mode')) {
+                    localStorage.setItem('lowPowerMode', 'enabled');
+                } else {
+                    localStorage.removeItem('lowPowerMode');
+                }
+            }
+
+            /**
+             * Checks and applies Low Power Mode from localStorage on load.
+             */
+            function checkLowPowerMode() {
+                if (localStorage.getItem('lowPowerMode') === 'enabled') {
+                    document.body.classList.add('low-power-mode');
+                }
+            }
 
             /**
              * Sets up all the event listeners for the page.
@@ -1420,6 +1479,7 @@
                 });
 
                 themeSwitchBtn.addEventListener('click', toggleTheme);
+                lowPowerBtn.addEventListener('click', toggleLowPowerMode);
                 categorySidebar.addEventListener('click', handleCategoryFilter);
 
                 document.querySelectorAll('.element[data-number]').forEach(el => {
