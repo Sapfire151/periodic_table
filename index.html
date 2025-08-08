@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-Bit Periodic Table</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+    <style>
+        /* ------------------------- */
+        /* --- Root and Globals ---- */
+        /* ------------------------- */
+        :root {
+            --font-main: 'Press Start 2P', cursive;
+            --font-ascii: 'VT323', monospace;
+            
+            /* --- Themes --- */
+            /* Classic Theme */
+            --classic-bg: #1a1a1a;
+            --classic-text: #e0e0e0;
+            --classic-primary: #3c9cff;
+            --classic-secondary: #ff55a3;
+            --classic-accent: #50fa7b;
+            --classic-glass-bg: rgba(40, 40, 40, 0.35); /* More transparency */
+            --classic-border: #888;
+
+            /* Vaporwave Theme */
+            --vapor-bg: #0d0221;
+            --vapor-text: #f0f0f0;
+            --vapor-primary: #ff71ce;
+            --vapor-secondary: #01cdfe;
+            --vapor-accent: #05ffa1;
+            --vapor-glass-bg: rgba(45, 10, 80, 0.3); /* More transparency */
+            --vapor-border: #ff71ce;
+
+            /* Hacker Theme (Konami Code) */
+            --hacker-bg: #000000;
+            --hacker-text: #00ff00;
+            --hacker-primary: #00ff00;
+            --hacker-secondary: #ff0000;
+            --hacker-accent: #ffff00;
+            --hacker-glass-bg: rgba(0, 50, 0, 0.3); /* More transparency */
+            --hacker-border: #00ff00;
+
+            /* Default to Classic Theme */
+            --bg-color: var(--classic-bg);
+            --text-color: var(--classic-text);
+            --primary-color: var(--classic-primary);
+            --secondary-color: var(--classic-secondary);
+            --accent-color: var(--classic-accent);
+            --glass-bg-color: var(--classic-glass-bg);
+            --border-color: var(--classic-border);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            transition: background-color 0.5s, color 0.5s;
+            image-rendering: pixelated;
+        }
+
+        /* --- Theme Switching --- */
+        body.theme-vaporwave {
+            --bg-color: var(--vapor-bg);
+            --text-color: var(--vapor-text);
+            --primary-color: var(--vapor-primary);
+            --secondary-color: var(--vapor-secondary);
+            --accent-color: var(--vapor-accent);
+            --glass-bg-color: var(--vapor-glass-bg);
+            --border-color: var(--vapor-border);
+        }
+        
+        body.theme-hacker {
+            --bg-color: var(--hacker-bg);
+            --text-color: var(--hacker-text);
+            --primary-color: var(--hacker-primary);
+            --secondary-color: var(--hacker-secondary);
+            --accent-color: var(--hacker-accent);
+            --glass-bg-color: var(--hacker-glass-bg);
+            --border-color: var(--hacker-border);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--text-color); 
+            text-shadow: 3px 3px 0px var(--primary-color), 6px 6px 0px var(--secondary-color);
+            letter-spacing: 2px;
+            transition: color 0.5s, text-shadow 0.5s;
+        }
+
+        h1 {
+            font-size: 2em; /* Adjusted for text title */
+            margin-bottom: 20px;
+        }
+        
+        /* ------------------------- */
+        /* --- Gimmicks: BG & UI --- */
+        /* ------------------------- */
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.5;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0) 0px,
+                rgba(0, 0, 0, 0) 2px,
+                rgba(0, 0, 0, 0.2) 3px
+            );
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        #digital-clock {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 14px;
+            padding: 5px 10px;
+            background: var(--glass-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            z-index: 1001;
+            color: var(--accent-color);
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* ------------------------- */
+        /* ----- Main Layout ------- */
+        /* ------------------------- */
+        .page-wrapper {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #gemini-search-container {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        #gemini-search-input {
+            flex-grow: 1;
+            padding: 15px;
+            font-family: var(--font-main);
+            font-size: 14px;
+            border: 2px solid var(--border-color);
+            background-color: var(--glass-bg-color);
+            color: var(--text-color);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        #gemini-search-input:focus {
+            box-shadow: 0 0 15px var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        #gemini-search-btn {
+            padding: 15px;
+        }
+        
+        #gemini-response-container {
+            width: 100%;
+            max-width: 800px;
+            min-height: 50px;
+            padding: 20px;
+            font-size: 12px;
+            line-height: 1.6;
+            background: var(--glass-bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            display: none; /* Hidden by default */
+        }
+        
+        .loader {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* --- Category Sidebar --- */
+        #category-sidebar {
+            position: sticky;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 15px;
+            background: var(--glass-bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        #category-sidebar h3 {
+            font-size: 12px;
+            margin: 0 0 10px 0;
+            text-align: center;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        
+        .filter-btn {
+            padding: 8px 12px;
+            font-family: var(--font-main);
+            font-size: 10px;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            background-color: transparent;
+            color: var(--text-color);
+            border-radius: 5px;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+            border-color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        #periodic-table {
+            display: grid;
+            grid-template-columns: repeat(18, 1fr);
+            grid-template-rows: repeat(10, auto);
+            gap: 5px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ------------------------- */
+        /* ---- Element Styles ----- */
+        /* ------------------------- */
+        .element {
+            position: relative;
+            padding: 5px;
+            border: 2px solid var(--border-color);
+            background-color: var(--glass-bg-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease-in-out, opacity 1s, transform 1s;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            min-width: 40px;
+            opacity: 0; /* For load-in animation */
+            transform: scale(0); /* For load-in animation */
+        }
+        
+        .element.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .element:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 0 20px var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .element .symbol {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .element .atomic-number {
+            position: absolute;
+            top: 3px;
+            left: 5px;
+            font-size: 0.8em;
+        }
+
+        .element .name {
+            display: none; /* Removed full name from element blocks */
+        }
+        
+        .element.faded {
+            opacity: 0.2 !important;
+            filter: grayscale(80%);
+            pointer-events: none;
+        }
+        
+        .element.highlight {
+            border-color: var(--accent-color);
+            transform: scale(1.1);
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* --- Element Color Coding --- */
+        .category-alkali-metal { background-color: rgba(255, 107, 107, 0.4); }
+        .category-alkaline-earth-metal { background-color: rgba(255, 195, 107, 0.4); }
+        .category-lanthanide { background-color: rgba(255, 159, 243, 0.4); }
+        .category-actinide { background-color: rgba(203, 159, 243, 0.4); }
+        .category-transition-metal { background-color: rgba(239, 134, 134, 0.4); }
+        .category-post-transition-metal { background-color: rgba(134, 239, 172, 0.4); }
+        .category-metalloid { background-color: rgba(134, 207, 239, 0.4); }
+        .category-diatomic-nonmetal, .category-polyatomic-nonmetal { background-color: rgba(160, 239, 134, 0.4); }
+        .category-halogen { background-color: rgba(239, 223, 134, 0.4); }
+        .category-noble-gas { background-color: rgba(191, 134, 239, 0.4); }
+        .category-unknown { background-color: rgba(150, 150, 150, 0.4); }
+
+
+        /* Responsive font size */
+        @media (max-width: 1200px) {
+            .page-wrapper { grid-template-columns: 1fr; }
+            #category-sidebar { 
+                position: relative; 
+                flex-direction: row; 
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 100%;
+                max-height: none;
+            }
+            .info-boxes-wrapper {
+                flex-direction: column;
+            }
+        }
+        @media (min-width: 1200px) {
+            .element { font-size: 12px; }
+        }
+        
+        /* Keyframe Animations */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 5px var(--accent-color); }
+            50% { box-shadow: 0 0 20px var(--accent-color); }
+            100% { box-shadow: 0 0 5px var(--accent-color); }
+        }
+        
+        @keyframes modal-enter {
+            from { opacity: 0; transform: scale(0.7) rotate(-10deg); }
+            to { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+
+        /* ------------------------- */
+        /* ---- Element Modal ------ */
+        /* ------------------------- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            position: absolute; /* Changed for dragging */
+            background: var(--glass-bg-color);
+            backdrop-filter: blur(25px); /* Enhanced frost glass */
+            -webkit-backdrop-filter: blur(25px); /* Enhanced frost glass */
+            border: 3px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 25px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .modal-overlay.visible .modal-content {
+            animation: modal-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        
+        @media (min-width: 768px) {
+            .modal-content { grid-template-columns: 300px 1fr; }
+        }
+
+        .modal-header {
+            grid-column: 1 / -1;
+            text-align: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            cursor: move; /* Gimmick: Draggable modal */
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .modal-header h3 {
+            margin: 5px 0 0;
+            font-size: 14px;
+            color: var(--accent-color);
+            font-weight: normal;
+        }
+
+        #atom-simulation-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #atom-canvas {
+            background: #000;
+            border-radius: 8px;
+            border: 2px solid var(--secondary-color);
+            width: 100%;
+            max-width: 280px;
+            aspect-ratio: 1 / 1;
+        }
+
+        .modal-description p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0 0 15px 0;
+        }
+        
+        .modal-description .wiki-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: var(--primary-color);
+            color: var(--bg-color);
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .wiki-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .modal-details ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 12px;
+        }
+        
+        .modal-details li {
+            padding: 8px 0;
+            border-bottom: 1px dotted var(--border-color);
+        }
+
+        .modal-details li strong {
+            color: var(--accent-color);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 28px;
+            font-family: monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 1001;
+        }
+        
+        .close-modal:hover {
+            color: var(--secondary-color);
+            transform: rotate(90deg);
+        }
+
+        /* ------------------------- */
+        /* --- More Gimmicks ------- */
+        /* ------------------------- */
+        .theme-switcher {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1001;
+        }
+
+        .switch-button {
+            padding: 10px 15px;
+            font-family: var(--font-main);
+            font-size: 12px;
+            cursor: pointer;
+            border: 2px solid var(--border-color);
+            background-color: var(--glass-bg-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+        }
+        .switch-button:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+        
+        .info-boxes-wrapper {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+        }
+        
+        #fun-fact-container, #eotd-container, #game-container {
+            flex: 1;
+            padding: 15px;
+            border: 2px dashed var(--secondary-color);
+            background: var(--glass-bg-color);
+            backdrop-filter: blur(5px);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        #fun-fact-container h3, #eotd-container h3, #game-container h3 {
+            margin: 0 0 10px 0;
+            color: var(--secondary-color);
+            font-size: 14px;
+        }
+
+        #fun-fact-text, #eotd-text {
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-color);
+            min-height: 4.5em; /* Reserve space to prevent layout shift */
+            transition: opacity 0.5s;
+        }
+        
+        #eotd-container {
+            border-style: solid;
+            border-color: var(--accent-color);
+        }
+        #eotd-container h3 {
+            color: var(--accent-color);
+        }
+
+        #game-container {
+            border-style: dotted;
+            border-color: var(--primary-color);
+        }
+        #game-container h3 {
+            color: var(--primary-color);
+        }
+        #game-clue {
+            font-size: 12px;
+            margin-bottom: 10px;
+            min-height: 2.5em;
+        }
+        #game-input {
+            width: 80%;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            font-size: 10px;
+            padding: 5px;
+            text-align: center;
+        }
+        #game-result {
+            margin-top: 10px;
+            font-size: 12px;
+            min-height: 1.2em;
+        }
+        
+        #tooltip {
+            position: fixed;
+            background: black;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 2000;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="matrix-bg"></canvas>
+    <div class="scanlines"></div>
+    <div id="digital-clock">00:00:00</div>
+    <div id="tooltip"></div>
+
+    <div class="page-wrapper">
+        <div class="main-content">
+            <h1>16-Bit Periodic Table</h1>
+            <div id="gemini-search-container">
+                <input type="text" id="gemini-search-input" placeholder="Ask Gemini about the elements...">
+                <button id="gemini-search-btn" class="switch-button">Search</button>
+            </div>
+            <div id="gemini-response-container"></div>
+            
+            <div id="periodic-table">
+                <!-- Elements will be dynamically inserted here by JavaScript -->
+            </div>
+
+            <div class="info-boxes-wrapper">
+                <div id="eotd-container">
+                    <h3>* Element of the Day *</h3>
+                    <p id="eotd-text">Loading...</p>
+                </div>
+                <div id="game-container">
+                    <h3>Guess the Element!</h3>
+                    <p id="game-clue">Click "New Game" to start!</p>
+                    <input type="text" id="game-input" placeholder="Type element name...">
+                    <p id="game-result">&nbsp;</p>
+                    <button id="game-submit-btn" class="switch-button">Submit</button>
+                    <button id="game-new-btn" class="switch-button">New Game</button>
+                </div>
+                <div id="fun-fact-container">
+                    <h3>* Fun Fact! *</h3>
+                    <p id="fun-fact-text">Click an element or wait for a random fact!</p>
+                </div>
+            </div>
+            
+        </div>
+        
+        <aside id="category-sidebar">
+             <h3>Categories</h3>
+             <!-- Filter buttons will be dynamically inserted here -->
+        </aside>
+    </div>
+
+    <div class="modal-overlay" id="element-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-modal-button">&times;</button>
+            <div class="modal-header" id="modal-header">
+                <h2 id="modal-element-name">Element</h2>
+                <h3 id="modal-element-category">Category</h3>
+            </div>
+            
+            <div id="atom-simulation-container">
+                 <canvas id="atom-canvas" width="300" height="300"></canvas>
+                 <p style="font-size:10px; color: var(--border-color);">Top-down Atom Simulation</p>
+            </div>
+
+            <div class="modal-description">
+                <p id="modal-description-text"></p>
+                <div class="modal-details">
+                    <ul>
+                        <li><strong>Symbol:</strong> <span id="modal-symbol"></span></li>
+                        <li><strong>Atomic Number:</strong> <span id="modal-atomic-number"></span></li>
+                        <li><strong>Atomic Mass:</strong> <span id="modal-atomic-mass"></span></li>
+                        <li><strong>Rarity:</strong> <span id="modal-rarity"></span></li>
+                        <li><strong>Discovered:</strong> <span id="modal-discovery"></span></li>
+                        <li><strong>Discovered By:</strong> <span id="modal-discovered-by"></span></li>
+                        <li><strong>Melting Point:</strong> <span id="modal-melting-point"></span></li>
+                        <li><strong>Boiling Point:</strong> <span id="modal-boiling-point"></span></li>
+                        <li><strong>Density:</strong> <span id="modal-density"></span></li>
+                        <li><strong>Electron Config:</strong> <span id="modal-electron-config"></span></li>
+                    </ul>
+                </div>
+                <a href="#" id="modal-wiki-link" class="wiki-link" target="_blank" rel="noopener noreferrer">Learn more on Wikipedia</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="theme-switcher">
+        <button id="theme-switch-btn" class="switch-button">Switch Theme</button>
+    </div>
+
+    <script>
+        // Ensure the entire DOM is loaded before we start manipulating it.
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // ##########################################
+            // ####### ELEMENT DATA & CONSTANTS #########
+            // ##########################################
+            
+            // This is the complete data for all 118 elements, with new properties.
+            const elementsData = [
+                { number: 1, symbol: 'H', name: 'Hydrogen', mass: 1.008, category: 'diatomic-nonmetal', group: 1, period: 1, shells: [1], rarity: 'Abundant', discovery: '1766', desc: 'The lightest and most abundant element, making up about 75% of the universe\'s elemental mass.', melting_point: '13.83 K', boiling_point: '20.27 K', electron_configuration: '1s¹', density: '0.08988 g/L', discovered_by: 'Henry Cavendish' },
+                { number: 2, symbol: 'He', name: 'Helium', mass: 4.0026, category: 'noble-gas', group: 18, period: 1, shells: [2], rarity: 'Common', discovery: '1868', desc: 'The second lightest element, known for its use in balloons and cryogenics. First detected in the sun.', melting_point: '0.95 K', boiling_point: '4.22 K', electron_configuration: '1s²', density: '0.1786 g/L', discovered_by: 'Pierre Janssen & Norman Lockyer' },
+                { number: 3, symbol: 'Li', name: 'Lithium', mass: 6.94, category: 'alkali-metal', group: 1, period: 2, shells: [2, 1], rarity: 'Uncommon', discovery: '1817', desc: 'A soft, silvery-white alkali metal. It is the least dense solid element and is highly reactive. Crucial for batteries.', melting_point: '453.65 K', boiling_point: '1615 K', electron_configuration: '[He] 2s¹', density: '0.534 g/cm³', discovered_by: 'Johan August Arfwedson' },
+                { number: 4, symbol: 'Be', name: 'Beryllium', mass: 9.0122, category: 'alkaline-earth-metal', group: 2, period: 2, shells: [2, 2], rarity: 'Uncommon', discovery: '1798', desc: 'A relatively rare, steel-gray, strong, lightweight yet brittle alkaline earth metal.', melting_point: '1560 K', boiling_point: '2742 K', electron_configuration: '[He] 2s²', density: '1.85 g/cm³', discovered_by: 'Louis-Nicolas Vauquelin' },
+                { number: 5, symbol: 'B', name: 'Boron', mass: 10.81, category: 'metalloid', group: 13, period: 2, shells: [2, 3], rarity: 'Uncommon', discovery: '1808', desc: 'A metalloid that exists in many forms. Boron filaments are used in aerospace structures for their high strength.', melting_point: '2349 K', boiling_point: '4200 K', electron_configuration: '[He] 2s² 2p¹', density: '2.34 g/cm³', discovered_by: 'Joseph Louis Gay-Lussac & Humphry Davy' },
+                { number: 6, symbol: 'C', name: 'Carbon', mass: 12.011, category: 'polyatomic-nonmetal', group: 14, period: 2, shells: [2, 4], rarity: 'Abundant', discovery: 'Ancient', desc: 'The basis of all known life on Earth. It can form a vast number of compounds, more than any other element.', melting_point: '3800 K', boiling_point: '5100 K', electron_configuration: '[He] 2s² 2p²', density: '2.267 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 7, symbol: 'N', name: 'Nitrogen', mass: 14.007, category: 'diatomic-nonmetal', group: 15, period: 2, shells: [2, 5], rarity: 'Abundant', discovery: '1772', desc: 'Makes up about 78% of Earth\'s atmosphere. Essential for life, found in proteins and nucleic acids.', melting_point: '63.15 K', boiling_point: '77.36 K', electron_configuration: '[He] 2s² 2p³', density: '1.251 g/L', discovered_by: 'Daniel Rutherford' },
+                { number: 8, symbol: 'O', name: 'Oxygen', mass: 15.999, category: 'diatomic-nonmetal', group: 16, period: 2, shells: [2, 6], rarity: 'Abundant', discovery: '1774', desc: 'A highly reactive nonmetal that makes up about 21% of the Earth\'s atmosphere and is essential for respiration.', melting_point: '54.36 K', boiling_point: '90.20 K', electron_configuration: '[He] 2s² 2p⁴', density: '1.429 g/L', discovered_by: 'Carl Wilhelm Scheele & Joseph Priestley' },
+                { number: 9, symbol: 'F', name: 'Fluorine', mass: 18.998, category: 'halogen', group: 17, period: 2, shells: [2, 7], rarity: 'Common', discovery: '1670', desc: 'The most electronegative and reactive of all elements. It is a pale yellow-green diatomic gas.', melting_point: '53.53 K', boiling_point: '85.03 K', electron_configuration: '[He] 2s² 2p⁵', density: '1.696 g/L', discovered_by: 'Henri Moissan' },
+                { number: 10, symbol: 'Ne', name: 'Neon', mass: 20.180, category: 'noble-gas', group: 18, period: 2, shells: [2, 8], rarity: 'Common', discovery: '1898', desc: 'A noble gas that gives a distinct reddish-orange glow when used in vacuum discharge tubes and neon advertising signs.', melting_point: '24.56 K', boiling_point: '27.07 K', electron_configuration: '[He] 2s² 2p⁶', density: '0.9002 g/L', discovered_by: 'Morris Travers & William Ramsay' },
+                { number: 11, symbol: 'Na', name: 'Sodium', mass: 22.990, category: 'alkali-metal', group: 1, period: 3, shells: [2, 8, 1], rarity: 'Common', discovery: '1807', desc: 'A soft, silvery-white, highly reactive metal. It is an essential element for animal life.', melting_point: '370.87 K', boiling_point: '1156 K', electron_configuration: '[Ne] 3s¹', density: '0.971 g/cm³', discovered_by: 'Humphry Davy' },
+                { number: 12, symbol: 'Mg', name: 'Magnesium', mass: 24.305, category: 'alkaline-earth-metal', group: 2, period: 3, shells: [2, 8, 2], rarity: 'Common', discovery: '1808', desc: 'A shiny gray solid which is essential for all cellular life. It is used in lightweight alloys.', melting_point: '923 K', boiling_point: '1363 K', electron_configuration: '[Ne] 3s²', density: '1.738 g/cm³', discovered_by: 'Humphry Davy' },
+                { number: 13, symbol: 'Al', name: 'Aluminum', mass: 26.982, category: 'post-transition-metal', group: 13, period: 3, shells: [2, 8, 3], rarity: 'Abundant', discovery: '1825', desc: 'A silvery-white, soft, non-magnetic and ductile metal. The most abundant metal in the Earth\'s crust.', melting_point: '933.47 K', boiling_point: '2792 K', electron_configuration: '[Ne] 3s² 3p¹', density: '2.70 g/cm³', discovered_by: 'Hans Christian Ørsted' },
+                { number: 14, symbol: 'Si', name: 'Silicon', mass: 28.085, category: 'metalloid', group: 14, period: 3, shells: [2, 8, 4], rarity: 'Abundant', discovery: '1823', desc: 'A hard, brittle crystalline solid with a blue-grey metallic lustre. The basis of the modern electronics industry.', melting_point: '1687 K', boiling_point: '3538 K', electron_configuration: '[Ne] 3s² 3p²', density: '2.3296 g/cm³', discovered_by: 'Jöns Jacob Berzelius' },
+                { number: 15, symbol: 'P', name: 'Phosphorus', mass: 30.974, category: 'polyatomic-nonmetal', group: 15, period: 3, shells: [2, 8, 5], rarity: 'Common', discovery: '1669', desc: 'Essential for life, found in DNA, RNA, and ATP. Known for its white form which glows in the dark.', melting_point: '317.3 K', boiling_point: '553.7 K', electron_configuration: '[Ne] 3s² 3p³', density: '1.82 g/cm³', discovered_by: 'Hennig Brand' },
+                { number: 16, symbol: 'S', name: 'Sulfur', mass: 32.06, category: 'polyatomic-nonmetal', group: 16, period: 3, shells: [2, 8, 6], rarity: 'Common', discovery: 'Ancient', desc: 'A bright yellow, crystalline solid. Known for its distinct smell when in compounds like hydrogen sulfide.', melting_point: '388.36 K', boiling_point: '717.8 K', electron_configuration: '[Ne] 3s² 3p⁴', density: '2.067 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 17, symbol: 'Cl', name: 'Chlorine', mass: 35.45, category: 'halogen', group: 17, period: 3, shells: [2, 8, 7], rarity: 'Common', discovery: '1774', desc: 'A yellow-green gas, it is a powerful oxidizing agent used in disinfectants and bleach.', melting_point: '171.6 K', boiling_point: '239.11 K', electron_configuration: '[Ne] 3s² 3p⁵', density: '3.214 g/L', discovered_by: 'Carl Wilhelm Scheele' },
+                { number: 18, symbol: 'Ar', name: 'Argon', mass: 39.948, category: 'noble-gas', group: 18, period: 3, shells: [2, 8, 8], rarity: 'Common', discovery: '1894', desc: 'The third-most abundant gas in the Earth\'s atmosphere. Used in welding and light bulbs.', melting_point: '83.80 K', boiling_point: '87.30 K', electron_configuration: '[Ne] 3s² 3p⁶', density: '1.784 g/L', discovered_by: 'Lord Rayleigh & William Ramsay' },
+                { number: 19, symbol: 'K', name: 'Potassium', mass: 39.098, category: 'alkali-metal', group: 1, period: 4, shells: [2, 8, 8, 1], rarity: 'Common', discovery: '1807', desc: 'A silvery-white metal that is soft enough to be cut with a knife. Vital for the functioning of the human body.', melting_point: '336.53 K', boiling_point: '1032 K', electron_configuration: '[Ar] 4s¹', density: '0.862 g/cm³', discovered_by: 'Humphry Davy' },
+                { number: 20, symbol: 'Ca', name: 'Calcium', mass: 40.078, category: 'alkaline-earth-metal', group: 2, period: 4, shells: [2, 8, 8, 2], rarity: 'Common', discovery: '1808', desc: 'Essential for living organisms, particularly in cell physiology, and is the most common metal in many animals.', melting_point: '1115 K', boiling_point: '1757 K', electron_configuration: '[Ar] 4s²', density: '1.54 g/cm³', discovered_by: 'Humphry Davy' },
+                { number: 21, symbol: 'Sc', name: 'Scandium', mass: 44.956, category: 'transition-metal', group: 3, period: 4, shells: [2, 8, 9, 2], rarity: 'Rare', discovery: '1879', desc: 'A silvery-white metallic d-block element, it has historically been classified as a rare-earth element.', melting_point: '1814 K', boiling_point: '3109 K', electron_configuration: '[Ar] 3d¹ 4s²', density: '2.985 g/cm³', discovered_by: 'Lars Fredrik Nilson' },
+                { number: 22, symbol: 'Ti', name: 'Titanium', mass: 47.867, category: 'transition-metal', group: 4, period: 4, shells: [2, 8, 10, 2], rarity: 'Common', discovery: '1791', desc: 'A lustrous transition metal with a silver color, low density, and high strength. Highly resistant to corrosion.', melting_point: '1941 K', boiling_point: '3560 K', electron_configuration: '[Ar] 3d² 4s²', density: '4.54 g/cm³', discovered_by: 'William Gregor' },
+                { number: 23, symbol: 'V', name: 'Vanadium', mass: 50.942, category: 'transition-metal', group: 5, period: 4, shells: [2, 8, 11, 2], rarity: 'Uncommon', discovery: '1801', desc: 'A hard, silvery-grey, ductile, and malleable transition metal. Rarely found in nature in its elemental form.', melting_point: '2183 K', boiling_point: '3680 K', electron_configuration: '[Ar] 3d³ 4s²', density: '6.11 g/cm³', discovered_by: 'Andrés Manuel del Río' },
+                { number: 24, symbol: 'Cr', name: 'Chromium', mass: 51.996, category: 'transition-metal', group: 6, period: 4, shells: [2, 8, 13, 1], rarity: 'Common', discovery: '1797', desc: 'A steely-gray, lustrous, hard and brittle metal which takes a high polish and is used for plating.', melting_point: '2180 K', boiling_point: '2944 K', electron_configuration: '[Ar] 3d⁵ 4s¹', density: '7.15 g/cm³', discovered_by: 'Louis-Nicolas Vauquelin' },
+                { number: 25, symbol: 'Mn', name: 'Manganese', mass: 54.938, category: 'transition-metal', group: 7, period: 4, shells: [2, 8, 13, 2], rarity: 'Common', discovery: '1774', desc: 'A hard brittle silvery metal, often found in minerals in combination with iron. Important in steel production.', melting_point: '1519 K', boiling_point: '2334 K', electron_configuration: '[Ar] 3d⁵ 4s²', density: '7.44 g/cm³', discovered_by: 'Carl Wilhelm Scheele' },
+                { number: 26, symbol: 'Fe', name: 'Iron', mass: 55.845, category: 'transition-metal', group: 8, period: 4, shells: [2, 8, 14, 2], rarity: 'Abundant', discovery: 'Ancient', desc: 'The most common element on Earth by mass, forming much of Earth\'s outer and inner core.', melting_point: '1811 K', boiling_point: '3134 K', electron_configuration: '[Ar] 3d⁶ 4s²', density: '7.874 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 27, symbol: 'Co', name: 'Cobalt', mass: 58.933, category: 'transition-metal', group: 9, period: 4, shells: [2, 8, 15, 2], rarity: 'Uncommon', discovery: '1735', desc: 'A hard, lustrous, silver-gray metal. Used in magnets and high-strength alloys.', melting_point: '1768 K', boiling_point: '3200 K', electron_configuration: '[Ar] 3d⁷ 4s²', density: '8.86 g/cm³', discovered_by: 'Georg Brandt' },
+                { number: 28, symbol: 'Ni', name: 'Nickel', mass: 58.693, category: 'transition-metal', group: 10, period: 4, shells: [2, 8, 16, 2], rarity: 'Common', discovery: '1751', desc: 'A silvery-white lustrous metal with a slight golden tinge. Corrosion-resistant, used in coins and alloys.', melting_point: '1728 K', boiling_point: '3186 K', electron_configuration: '[Ar] 3d⁸ 4s²', density: '8.912 g/cm³', discovered_by: 'Axel Fredrik Cronstedt' },
+                { number: 29, symbol: 'Cu', name: 'Copper', mass: 63.546, category: 'transition-metal', group: 11, period: 4, shells: [2, 8, 18, 1], rarity: 'Common', discovery: 'Ancient', desc: 'A soft, malleable, and ductile metal with very high thermal and electrical conductivity.', melting_point: '1357.77 K', boiling_point: '2835 K', electron_configuration: '[Ar] 3d¹⁰ 4s¹', density: '8.96 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 30, symbol: 'Zn', name: 'Zinc', mass: 65.38, category: 'transition-metal', group: 12, period: 4, shells: [2, 8, 18, 2], rarity: 'Common', discovery: 'Ancient', desc: 'A bluish-white, lustrous metal, used to galvanize steel to prevent rusting.', melting_point: '692.68 K', boiling_point: '1180 K', electron_configuration: '[Ar] 3d¹⁰ 4s²', density: '7.134 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 31, symbol: 'Ga', name: 'Gallium', mass: 69.723, category: 'post-transition-metal', group: 13, period: 4, shells: [2, 8, 18, 3], rarity: 'Uncommon', discovery: '1875', desc: 'A soft, silvery metal that is a brittle solid at low temperatures but liquefies above room temperature.', melting_point: '302.91 K', boiling_point: '2477 K', electron_configuration: '[Ar] 3d¹⁰ 4s² 4p¹', density: '5.907 g/cm³', discovered_by: 'Paul-Émile Lecoq de Boisbaudran' },
+                { number: 32, symbol: 'Ge', name: 'Germanium', mass: 72.630, category: 'metalloid', group: 14, period: 4, shells: [2, 8, 18, 4], rarity: 'Rare', discovery: '1886', desc: 'A lustrous, hard, grayish-white metalloid. Important semiconductor used in transistors and electronics.', melting_point: '1211.40 K', boiling_point: '3106 K', electron_configuration: '[Ar] 3d¹⁰ 4s² 4p²', density: '5.323 g/cm³', discovered_by: 'Clemens Winkler' },
+                { number: 33, symbol: 'As', name: 'Arsenic', mass: 74.922, category: 'metalloid', group: 15, period: 4, shells: [2, 8, 18, 5], rarity: 'Uncommon', discovery: 'Ancient', desc: 'A metalloid known for its use in poisons and pesticides. It has three common allotropes: gray, yellow, and black.', melting_point: '1090 K', boiling_point: '887 K', electron_configuration: '[Ar] 3d¹⁰ 4s² 4p³', density: '5.776 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 34, symbol: 'Se', name: 'Selenium', mass: 78.971, category: 'polyatomic-nonmetal', group: 16, period: 4, shells: [2, 8, 18, 6], rarity: 'Rare', discovery: '1817', desc: 'A nonmetal with properties that are intermediate between the elements above and below in the periodic table, sulfur and tellurium.', melting_point: '494 K', boiling_point: '958 K', electron_configuration: '[Ar] 3d¹⁰ 4s² 4p⁴', density: '4.809 g/cm³', discovered_by: 'Jöns Jacob Berzelius' },
+                { number: 35, symbol: 'Br', name: 'Bromine', mass: 79.904, category: 'halogen', group: 17, period: 4, shells: [2, 8, 18, 7], rarity: 'Uncommon', discovery: '1826', desc: 'A fuming red-brown liquid at room temperature that evaporates readily to form a similarly coloured gas.', melting_point: '265.8 K', boiling_point: '332.0 K', electron_configuration: '[Ar] 3d¹⁰ 4s² 4p⁵', density: '3.12 g/cm³', discovered_by: 'Antoine Jérôme Balard & Carl Jacob Löwig' },
+                { number: 36, symbol: 'Kr', name: 'Krypton', mass: 83.798, category: 'noble-gas', group: 18, period: 4, shells: [2, 8, 18, 8], rarity: 'Rare', discovery: '1898', desc: 'A colorless, odorless, tasteless noble gas that occurs in trace amounts in the atmosphere. Used in lasers.', melting_point: '115.79 K', boiling_point: '119.93 K', electron_configuration: '[Ar] 3d¹⁰ 4s² 4p⁶', density: '3.749 g/L', discovered_by: 'Morris Travers & William Ramsay' },
+                { number: 37, symbol: 'Rb', name: 'Rubidium', mass: 85.468, category: 'alkali-metal', group: 1, period: 5, shells: [2, 8, 18, 8, 1], rarity: 'Uncommon', discovery: '1861', desc: 'A very soft, silvery-white metal in the alkali metal group. It can be liquid at ambient temperature.', melting_point: '312.46 K', boiling_point: '961 K', electron_configuration: '[Kr] 5s¹', density: '1.532 g/cm³', discovered_by: 'Robert Bunsen & Gustav Kirchhoff' },
+                { number: 38, symbol: 'Sr', name: 'Strontium', mass: 87.62, category: 'alkaline-earth-metal', group: 2, period: 5, shells: [2, 8, 18, 8, 2], rarity: 'Common', discovery: '1790', desc: 'A soft, silver-white yellowish metallic element. Known for the brilliant reds it imparts to fireworks.', melting_point: '1050 K', boiling_point: '1655 K', electron_configuration: '[Kr] 5s²', density: '2.64 g/cm³', discovered_by: 'Adair Crawford & William Cruickshank' },
+                { number: 39, symbol: 'Y', name: 'Yttrium', mass: 88.906, category: 'transition-metal', group: 3, period: 5, shells: [2, 8, 18, 9, 2], rarity: 'Uncommon', discovery: '1794', desc: 'A silvery-metallic transition metal chemically similar to the lanthanides. Used in red phosphors for TVs.', melting_point: '1799 K', boiling_point: '3609 K', electron_configuration: '[Kr] 4d¹ 5s²', density: '4.472 g/cm³', discovered_by: 'Johan Gadolin' },
+                { number: 40, symbol: 'Zr', name: 'Zirconium', mass: 91.224, category: 'transition-metal', group: 4, period: 5, shells: [2, 8, 18, 10, 2], rarity: 'Uncommon', discovery: '1789', desc: 'A lustrous, greyish-white, soft, ductile, and malleable metal that is highly resistant to corrosion.', melting_point: '2128 K', boiling_point: '4682 K', electron_configuration: '[Kr] 4d² 5s²', density: '6.52 g/cm³', discovered_by: 'Martin Heinrich Klaproth' },
+                { number: 41, symbol: 'Nb', name: 'Niobium', mass: 92.906, category: 'transition-metal', group: 5, period: 5, shells: [2, 8, 18, 12, 1], rarity: 'Uncommon', discovery: '1801', desc: 'A light grey, crystalline, and ductile transition metal. Used in superconducting materials.', melting_point: '2750 K', boiling_point: '5017 K', electron_configuration: '[Kr] 4d⁴ 5s¹', density: '8.57 g/cm³', discovered_by: 'Charles Hatchett' },
+                { number: 42, symbol: 'Mo', name: 'Molybdenum', mass: 95.96, category: 'transition-metal', group: 6, period: 5, shells: [2, 8, 18, 13, 1], rarity: 'Uncommon', discovery: '1778', desc: 'A silvery-white metal that is ductile and highly resistant to corrosion. It has one of the highest melting points.', melting_point: '2896 K', boiling_point: '4912 K', electron_configuration: '[Kr] 4d⁵ 5s¹', density: '10.22 g/cm³', discovered_by: 'Carl Wilhelm Scheele' },
+                { number: 43, symbol: 'Tc', name: 'Technetium', mass: 98, category: 'transition-metal', group: 7, period: 5, shells: [2, 8, 18, 13, 2], rarity: 'Synthetic', discovery: '1937', desc: 'The lightest element whose isotopes are all radioactive. It is a silvery-gray radioactive metal.', melting_point: '2430 K', boiling_point: '4538 K', electron_configuration: '[Kr] 4d⁵ 5s²', density: '11.5 g/cm³', discovered_by: 'Carlo Perrier & Emilio Segrè' },
+                { number: 44, symbol: 'Ru', name: 'Ruthenium', mass: 101.07, category: 'transition-metal', group: 8, period: 5, shells: [2, 8, 18, 15, 1], rarity: 'Very Rare', discovery: '1844', desc: 'A rare transition metal belonging to the platinum group. Used in wear-resistant electrical contacts.', melting_point: '2607 K', boiling_point: '4423 K', electron_configuration: '[Kr] 4d⁷ 5s¹', density: '12.37 g/cm³', discovered_by: 'Karl Ernst Claus' },
+                { number: 45, symbol: 'Rh', name: 'Rhodium', mass: 102.91, category: 'transition-metal', group: 9, period: 5, shells: [2, 8, 18, 16, 1], rarity: 'Very Rare', discovery: '1803', desc: 'A silvery-white, hard, corrosion-resistant, and chemically inert transition metal. One of the rarest precious metals.', melting_point: '2237 K', boiling_point: '3968 K', electron_configuration: '[Kr] 4d⁸ 5s¹', density: '12.41 g/cm³', discovered_by: 'William Hyde Wollaston' },
+                { number: 46, symbol: 'Pd', name: 'Palladium', mass: 106.42, category: 'transition-metal', group: 10, period: 5, shells: [2, 8, 18, 18], rarity: 'Rare', discovery: '1803', desc: 'A rare and lustrous silvery-white metal. Used in catalytic converters.', melting_point: '1828.05 K', boiling_point: '3236 K', electron_configuration: '[Kr] 4d¹⁰', density: '12.02 g/cm³', discovered_by: 'William Hyde Wollaston' },
+                { number: 47, symbol: 'Ag', name: 'Silver', mass: 107.87, category: 'transition-metal', group: 11, period: 5, shells: [2, 8, 18, 18, 1], rarity: 'Rare', discovery: 'Ancient', desc: 'A precious metal known for its brilliant white metallic luster. It has the highest electrical conductivity of any element.', melting_point: '1234.93 K', boiling_point: '2435 K', electron_configuration: '[Kr] 4d¹⁰ 5s¹', density: '10.49 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 48, symbol: 'Cd', name: 'Cadmium', mass: 112.41, category: 'transition-metal', group: 12, period: 5, shells: [2, 8, 18, 18, 2], rarity: 'Rare', discovery: '1817', desc: 'A soft, bluish-white metal which is chemically similar to the two other stable metals in group 12, zinc and mercury.', melting_point: '594.22 K', boiling_point: '1040 K', electron_configuration: '[Kr] 4d¹⁰ 5s²', density: '8.69 g/cm³', discovered_by: 'Karl Samuel Leberecht Hermann & Friedrich Stromeyer' },
+                { number: 49, symbol: 'In', name: 'Indium', mass: 114.82, category: 'post-transition-metal', group: 13, period: 5, shells: [2, 8, 18, 18, 3], rarity: 'Rare', discovery: '1863', desc: 'A very soft, silvery-white post-transition metal. Used to make transparent conductive coatings.', melting_point: '429.75 K', boiling_point: '2345 K', electron_configuration: '[Kr] 4d¹⁰ 5s² 5p¹', density: '7.31 g/cm³', discovered_by: 'Ferdinand Reich & Hieronymus Theodor Richter' },
+                { number: 50, symbol: 'Sn', name: 'Tin', mass: 118.71, category: 'post-transition-metal', group: 14, period: 5, shells: [2, 8, 18, 18, 4], rarity: 'Uncommon', discovery: 'Ancient', desc: 'A silvery metal that is malleable and not easily oxidized in air. Used in solder and to coat other metals.', melting_point: '505.08 K', boiling_point: '2875 K', electron_configuration: '[Kr] 4d¹⁰ 5s² 5p²', density: '7.287 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 51, symbol: 'Sb', name: 'Antimony', mass: 121.76, category: 'metalloid', group: 15, period: 5, shells: [2, 8, 18, 18, 5], rarity: 'Uncommon', discovery: 'Ancient', desc: 'A lustrous gray metalloid. Used as a flame retardant and in alloys with lead.', melting_point: '903.78 K', boiling_point: '1860 K', electron_configuration: '[Kr] 4d¹⁰ 5s² 5p³', density: '6.685 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 52, symbol: 'Te', name: 'Tellurium', mass: 127.60, category: 'metalloid', group: 16, period: 5, shells: [2, 8, 18, 18, 6], rarity: 'Very Rare', discovery: '1782', desc: 'A brittle, mildly toxic, rare, silver-white metalloid. Used in alloys and semiconductors.', melting_point: '722.66 K', boiling_point: '1261 K', electron_configuration: '[Kr] 4d¹⁰ 5s² 5p⁴', density: '6.232 g/cm³', discovered_by: 'Franz-Joseph Müller von Reichenstein' },
+                { number: 53, symbol: 'I', name: 'Iodine', mass: 126.90, category: 'halogen', group: 17, period: 5, shells: [2, 8, 18, 18, 7], rarity: 'Rare', discovery: '1811', desc: 'A lustrous, purple-black nonmetal that sublimes easily into a violet gas. Required for thyroid hormones.', melting_point: '386.85 K', boiling_point: '457.4 K', electron_configuration: '[Kr] 4d¹⁰ 5s² 5p⁵', density: '4.93 g/cm³', discovered_by: 'Bernard Courtois' },
+                { number: 54, symbol: 'Xe', name: 'Xenon', mass: 131.29, category: 'noble-gas', group: 18, period: 5, shells: [2, 8, 18, 18, 8], rarity: 'Very Rare', discovery: '1898', desc: 'A dense, colorless, odorless noble gas found in the Earth\'s atmosphere in trace amounts. Used in flash lamps.', melting_point: '161.4 K', boiling_point: '165.03 K', electron_configuration: '[Kr] 4d¹⁰ 5s² 5p⁶', density: '5.894 g/L', discovered_by: 'Morris Travers & William Ramsay' },
+                { number: 55, symbol: 'Cs', name: 'Caesium', mass: 132.91, category: 'alkali-metal', group: 1, period: 6, shells: [2, 8, 18, 18, 8, 1], rarity: 'Rare', discovery: '1860', desc: 'A soft, silvery-golden alkali metal which is liquid at or near room temperature. Used in atomic clocks.', melting_point: '301.59 K', boiling_point: '944 K', electron_configuration: '[Xe] 6s¹', density: '1.93 g/cm³', discovered_by: 'Robert Bunsen & Gustav Kirchhoff' },
+                { number: 56, symbol: 'Ba', name: 'Barium', mass: 137.33, category: 'alkaline-earth-metal', group: 2, period: 6, shells: [2, 8, 18, 18, 8, 2], rarity: 'Common', discovery: '1808', desc: 'A soft, silvery alkaline earth metal. Because of its high chemical reactivity, barium is never found in nature as a free element.', melting_point: '1000 K', boiling_point: '2170 K', electron_configuration: '[Xe] 6s²', density: '3.594 g/cm³', discovered_by: 'Humphry Davy' },
+                { number: 57, symbol: 'La', name: 'Lanthanum', mass: 138.91, category: 'lanthanide', group: 3, period: 6, shells: [2, 8, 18, 18, 9, 2], rarity: 'Uncommon', discovery: '1839', desc: 'A soft, ductile, silvery-white metal that tarnishes rapidly when exposed to air. It is the prototype of the lanthanide series.', melting_point: '1193 K', boiling_point: '3737 K', electron_configuration: '[Xe] 5d¹ 6s²', density: '6.145 g/cm³', discovered_by: 'Carl Gustaf Mosander' },
+                { number: 58, symbol: 'Ce', name: 'Cerium', mass: 140.12, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 19, 9, 2], rarity: 'Common', discovery: '1803', desc: 'A soft, ductile, and silvery-white metal that tarnishes when exposed to air. The most abundant of the rare-earth elements.', melting_point: '1068 K', boiling_point: '3716 K', electron_configuration: '[Xe] 4f¹ 5d¹ 6s²', density: '6.770 g/cm³', discovered_by: 'Martin Heinrich Klaproth, Jöns Jacob Berzelius, & Wilhelm Hisinger' },
+                { number: 59, symbol: 'Pr', name: 'Praseodymium', mass: 140.91, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 21, 8, 2], rarity: 'Uncommon', discovery: '1885', desc: 'A soft, silvery, malleable and ductile metal in the lanthanide group. Used in yellow glass.', melting_point: '1208 K', boiling_point: '3793 K', electron_configuration: '[Xe] 4f³ 6s²', density: '6.773 g/cm³', discovered_by: 'Carl Auer von Welsbach' },
+                { number: 60, symbol: 'Nd', name: 'Neodymium', mass: 144.24, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 22, 8, 2], rarity: 'Uncommon', discovery: '1885', desc: 'A soft silvery metal that tarnishes in air. Used in the creation of very strong permanent magnets.', melting_point: '1297 K', boiling_point: '3347 K', electron_configuration: '[Xe] 4f⁴ 6s²', density: '7.007 g/cm³', discovered_by: 'Carl Auer von Welsbach' },
+                { number: 61, symbol: 'Pm', name: 'Promethium', mass: 145, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 23, 8, 2], rarity: 'Synthetic', discovery: '1945', desc: 'All of its isotopes are radioactive; it is one of only two such elements that are followed in the periodic table by elements with stable forms.', melting_point: '1315 K', boiling_point: '3273 K', electron_configuration: '[Xe] 4f⁵ 6s²', density: '7.26 g/cm³', discovered_by: 'Jacob A. Marinsky, Lawrence E. Glendenin, & Charles D. Coryell' },
+                { number: 62, symbol: 'Sm', name: 'Samarium', mass: 150.36, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 24, 8, 2], rarity: 'Uncommon', discovery: '1879', desc: 'A moderately hard silvery metal that readily oxidizes in air. Used in magnets and as a neutron absorber.', melting_point: '1345 K', boiling_point: '2067 K', electron_configuration: '[Xe] 4f⁶ 6s²', density: '7.52 g/cm³', discovered_by: 'Paul-Émile Lecoq de Boisbaudran' },
+                { number: 63, symbol: 'Eu', name: 'Europium', mass: 151.96, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 25, 8, 2], rarity: 'Rare', discovery: '1901', desc: 'The most reactive of the rare-earth elements. Used as a red phosphor in television sets and fluorescent lamps.', melting_point: '1099 K', boiling_point: '1802 K', electron_configuration: '[Xe] 4f⁷ 6s²', density: '5.243 g/cm³', discovered_by: 'Eugène-Anatole Demarçay' },
+                { number: 64, symbol: 'Gd', name: 'Gadolinium', mass: 157.25, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 25, 9, 2], rarity: 'Uncommon', discovery: '1880', desc: 'A silvery-white, malleable, and ductile rare-earth element. Used as a contrast agent in MRIs.', melting_point: '1585 K', boiling_point: '3546 K', electron_configuration: '[Xe] 4f⁷ 5d¹ 6s²', density: '7.895 g/cm³', discovered_by: 'Jean Charles Galissard de Marignac' },
+                { number: 65, symbol: 'Tb', name: 'Terbium', mass: 158.93, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 27, 8, 2], rarity: 'Rare', discovery: '1843', desc: 'A silvery-white, rare earth metal that is malleable, ductile, and soft enough to be cut with a knife. Used in green phosphors.', melting_point: '1629 K', boiling_point: '3503 K', electron_configuration: '[Xe] 4f⁹ 6s²', density: '8.229 g/cm³', discovered_by: 'Carl Gustaf Mosander' },
+                { number: 66, symbol: 'Dy', name: 'Dysprosium', mass: 162.50, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 28, 8, 2], rarity: 'Rare', discovery: '1886', desc: 'A rare-earth element that has a metallic, bright silver luster. Used in control rods in nuclear reactors.', melting_point: '1680 K', boiling_point: '2840 K', electron_configuration: '[Xe] 4f¹⁰ 6s²', density: '8.55 g/cm³', discovered_by: 'Paul-Émile Lecoq de Boisbaudran' },
+                { number: 67, symbol: 'Ho', name: 'Holmium', mass: 164.93, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 29, 8, 2], rarity: 'Rare', discovery: '1878', desc: 'A relatively soft and malleable silvery-white rare-earth metal. Has the highest magnetic strength of any element.', melting_point: '1734 K', boiling_point: '2993 K', electron_configuration: '[Xe] 4f¹¹ 6s²', density: '8.795 g/cm³', discovered_by: 'Marc Delafontaine & Jacques-Louis Soret' },
+                { number: 68, symbol: 'Er', name: 'Erbium', mass: 167.26, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 30, 8, 2], rarity: 'Rare', discovery: '1843', desc: 'A silvery-white solid metal when artificially isolated. Used in photographic filters and as a fiber optic amplifier.', melting_point: '1802 K', boiling_point: '3141 K', electron_configuration: '[Xe] 4f¹² 6s²', density: '9.066 g/cm³', discovered_by: 'Carl Gustaf Mosander' },
+                { number: 69, symbol: 'Tm', name: 'Thulium', mass: 168.93, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 31, 8, 2], rarity: 'Very Rare', discovery: '1879', desc: 'The least abundant of the rare-earth elements. It is an easily workable metal with a bright, silvery-gray luster.', melting_point: '1818 K', boiling_point: '2223 K', electron_configuration: '[Xe] 4f¹³ 6s²', density: '9.321 g/cm³', discovered_by: 'Per Teodor Cleve' },
+                { number: 70, symbol: 'Yb', name: 'Ytterbium', mass: 173.05, category: 'lanthanide', group: -1, period: 6, shells: [2, 8, 18, 32, 8, 2], rarity: 'Rare', discovery: '1878', desc: 'A soft, malleable and ductile chemical element with a bright silvery luster. Used in certain steels.', melting_point: '1097 K', boiling_point: '1469 K', electron_configuration: '[Xe] 4f¹⁴ 6s²', density: '6.965 g/cm³', discovered_by: 'Jean Charles Galissard de Marignac' },
+                { number: 71, symbol: 'Lu', name: 'Lutetium', mass: 174.97, category: 'lanthanide', group: 3, period: 6, shells: [2, 8, 18, 32, 9, 2], rarity: 'Very Rare', discovery: '1907', desc: 'A silvery-white metal which resists corrosion in dry air, but not in moist air. The last element in the lanthanide series.', melting_point: '1925 K', boiling_point: '3675 K', electron_configuration: '[Xe] 4f¹⁴ 5d¹ 6s²', density: '9.84 g/cm³', discovered_by: 'Georges Urbain & Carl Auer von Welsbach' },
+                { number: 72, symbol: 'Hf', name: 'Hafnium', mass: 178.49, category: 'transition-metal', group: 4, period: 6, shells: [2, 8, 18, 32, 10, 2], rarity: 'Rare', discovery: '1923', desc: 'A lustrous, silvery, ductile metal. Chemically resembles zirconium and is found in most zirconium minerals.', melting_point: '2506 K', boiling_point: '4876 K', electron_configuration: '[Xe] 4f¹⁴ 5d² 6s²', density: '13.31 g/cm³', discovered_by: 'Dirk Coster & George de Hevesy' },
+                { number: 73, symbol: 'Ta', name: 'Tantalum', mass: 180.95, category: 'transition-metal', group: 5, period: 6, shells: [2, 8, 18, 32, 11, 2], rarity: 'Rare', discovery: '1802', desc: 'A rare, hard, blue-gray, lustrous transition metal that is highly corrosion-resistant. Used in electronic capacitors.', melting_point: '3290 K', boiling_point: '5731 K', electron_configuration: '[Xe] 4f¹⁴ 5d³ 6s²', density: '16.65 g/cm³', discovered_by: 'Anders Gustaf Ekeberg' },
+                { number: 74, symbol: 'W', name: 'Tungsten', mass: 183.84, category: 'transition-metal', group: 6, period: 6, shells: [2, 8, 18, 32, 12, 2], rarity: 'Uncommon', discovery: '1783', desc: 'A hard, rare metal under standard conditions. Has the highest melting point of all elements and is used in light bulb filaments.', melting_point: '3695 K', boiling_point: '5828 K', electron_configuration: '[Xe] 4f¹⁴ 5d⁴ 6s²', density: '19.25 g/cm³', discovered_by: 'Fausto & Juan José Elhuyar' },
+                { number: 75, symbol: 'Re', name: 'Rhenium', mass: 186.21, category: 'transition-metal', group: 7, period: 6, shells: [2, 8, 18, 32, 13, 2], rarity: 'Very Rare', discovery: '1925', desc: 'A silvery-white, heavy, third-row transition metal. One of the rarest elements in Earth\'s crust.', melting_point: '3459 K', boiling_point: '5869 K', electron_configuration: '[Xe] 4f¹⁴ 5d⁵ 6s²', density: '21.02 g/cm³', discovered_by: 'Walter Noddack, Ida Tacke, & Otto Berg' },
+                { number: 76, symbol: 'Os', name: 'Osmium', mass: 190.23, category: 'transition-metal', group: 8, period: 6, shells: [2, 8, 18, 32, 14, 2], rarity: 'Very Rare', discovery: '1803', desc: 'A hard, brittle, bluish-white transition metal in the platinum group. The densest naturally occurring element.', melting_point: '3306 K', boiling_point: '5285 K', electron_configuration: '[Xe] 4f¹⁴ 5d⁶ 6s²', density: '22.59 g/cm³', discovered_by: 'Smithson Tennant' },
+                { number: 77, symbol: 'Ir', name: 'Iridium', mass: 192.22, category: 'transition-metal', group: 9, period: 6, shells: [2, 8, 18, 32, 15, 2], rarity: 'Very Rare', discovery: '1803', desc: 'A very hard, brittle, silvery-white transition metal of the platinum group. The second-densest element.', melting_point: '2719 K', boiling_point: '4701 K', electron_configuration: '[Xe] 4f¹⁴ 5d⁷ 6s²', density: '22.56 g/cm³', discovered_by: 'Smithson Tennant' },
+                { number: 78, symbol: 'Pt', name: 'Platinum', mass: 195.08, category: 'transition-metal', group: 10, period: 6, shells: [2, 8, 18, 32, 17, 1], rarity: 'Very Rare', discovery: 'Ancient', desc: 'A dense, malleable, ductile, highly unreactive, precious, silverish-white transition metal.', melting_point: '2041.4 K', boiling_point: '4098 K', electron_configuration: '[Xe] 4f¹⁴ 5d⁹ 6s¹', density: '21.45 g/cm³', discovered_by: 'Antonio de Ulloa' },
+                { number: 79, symbol: 'Au', name: 'Gold', mass: 196.97, category: 'transition-metal', group: 11, period: 6, shells: [2, 8, 18, 32, 18, 1], rarity: 'Very Rare', discovery: 'Ancient', desc: 'A bright, slightly reddish yellow, dense, soft, malleable, and ductile metal. A precious metal used for coinage and jewelry.', melting_point: '1337.33 K', boiling_point: '3129 K', electron_configuration: '[Xe] 4f¹⁴ 5d¹⁰ 6s¹', density: '19.30 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 80, symbol: 'Hg', name: 'Mercury', mass: 200.59, category: 'transition-metal', group: 12, period: 6, shells: [2, 8, 18, 32, 18, 2], rarity: 'Rare', discovery: 'Ancient', desc: 'The only metallic element that is liquid at standard conditions for temperature and pressure.', melting_point: '234.32 K', boiling_point: '629.88 K', electron_configuration: '[Xe] 4f¹⁴ 5d¹⁰ 6s²', density: '13.5336 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 81, symbol: 'Tl', name: 'Thallium', mass: 204.38, category: 'post-transition-metal', group: 13, period: 6, shells: [2, 8, 18, 32, 18, 3], rarity: 'Rare', discovery: '1861', desc: 'A soft gray post-transition metal that is not found free in nature. Resembles tin but discolors when exposed to air.', melting_point: '577 K', boiling_point: '1746 K', electron_configuration: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p¹', density: '11.85 g/cm³', discovered_by: 'William Crookes' },
+                { number: 82, symbol: 'Pb', name: 'Lead', mass: 207.2, category: 'post-transition-metal', group: 14, period: 6, shells: [2, 8, 18, 32, 18, 4], rarity: 'Uncommon', discovery: 'Ancient', desc: 'A heavy metal that is denser than most common materials. It is soft and malleable, and has a relatively low melting point.', melting_point: '600.61 K', boiling_point: '2022 K', electron_configuration: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²', density: '11.342 g/cm³', discovered_by: 'Ancient civilizations' },
+                { number: 83, symbol: 'Bi', name: 'Bismuth', mass: 208.98, category: 'post-transition-metal', group: 15, period: 6, shells: [2, 8, 18, 32, 18, 5], rarity: 'Rare', discovery: 'Ancient', desc: 'A brittle metal with a silvery white color when freshly produced, but is often seen in air with a pink tinge.', melting_point: '544.7 K', boiling_point: '1837 K', electron_configuration: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p³', density: '9.78 g/cm³', discovered_by: 'Claude François Geoffroy' },
+                { number: 84, symbol: 'Po', name: 'Polonium', mass: 209, category: 'post-transition-metal', group: 16, period: 6, shells: [2, 8, 18, 32, 18, 6], rarity: 'Very Rare', discovery: '1898', desc: 'A rare and highly radioactive metal with no stable isotopes. Chemically similar to bismuth and tellurium.', melting_point: '527 K', boiling_point: '1235 K', electron_configuration: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁴', density: '9.32 g/cm³', discovered_by: 'Marie & Pierre Curie' },
+                { number: 85, symbol: 'At', name: 'Astatine', mass: 210, category: 'halogen', group: 17, period: 6, shells: [2, 8, 18, 32, 18, 7], rarity: 'Extremely Rare', discovery: '1940', desc: 'The rarest naturally occurring element in the Earth\'s crust. It is a radioactive halogen.', melting_point: '575 K', boiling_point: '610 K', electron_configuration: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁵', density: '7 g/cm³', discovered_by: 'Dale R. Corson, Kenneth Ross MacKenzie, & Emilio Segrè' },
+                { number: 86, symbol: 'Rn', name: 'Radon', mass: 222, category: 'noble-gas', group: 18, period: 6, shells: [2, 8, 18, 32, 18, 8], rarity: 'Rare', discovery: '1900', desc: 'A radioactive, colorless, odorless, tasteless noble gas. Occurs naturally as an intermediate step in radioactive decay chains.', melting_point: '202 K', boiling_point: '211.3 K', electron_configuration: '[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁶', density: '9.73 g/L', discovered_by: 'Friedrich Ernst Dorn' },
+                { number: 87, symbol: 'Fr', name: 'Francium', mass: 223, category: 'alkali-metal', group: 1, period: 7, shells: [2, 8, 18, 32, 18, 8, 1], rarity: 'Extremely Rare', discovery: '1939', desc: 'One of the most unstable of the naturally occurring elements: its most stable isotope has a half-life of only 22 minutes.', melting_point: '298 K', boiling_point: '950 K', electron_configuration: '[Rn] 7s¹', density: '1.87 g/cm³', discovered_by: 'Marguerite Perey' },
+                { number: 88, symbol: 'Ra', name: 'Radium', mass: 226, category: 'alkaline-earth-metal', group: 2, period: 7, shells: [2, 8, 18, 32, 18, 8, 2], rarity: 'Rare', discovery: '1898', desc: 'An almost pure-white alkaline earth metal, but it readily oxidizes on exposure to air, becoming black in color.', melting_point: '973 K', boiling_point: '2010 K', electron_configuration: '[Rn] 7s²', density: '5.5 g/cm³', discovered_by: 'Marie & Pierre Curie' },
+                { number: 89, symbol: 'Ac', name: 'Actinium', mass: 227, category: 'actinide', group: 3, period: 7, shells: [2, 8, 18, 32, 18, 9, 2], rarity: 'Rare', discovery: '1899', desc: 'A soft, silvery-white radioactive metal. It glows faintly in the dark with an eerie blue light.', melting_point: '1323 K', boiling_point: '3471 K', electron_configuration: '[Rn] 6d¹ 7s²', density: '10.07 g/cm³', discovered_by: 'André-Louis Debierne' },
+                { number: 90, symbol: 'Th', name: 'Thorium', mass: 232.04, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 18, 10, 2], rarity: 'Uncommon', discovery: '1829', desc: 'A weakly radioactive metallic chemical element. When pure, thorium is a silvery-white metal that holds its luster for several months.', melting_point: '2115 K', boiling_point: '5061 K', electron_configuration: '[Rn] 6d² 7s²', density: '11.724 g/cm³', discovered_by: 'Jöns Jacob Berzelius' },
+                { number: 91, symbol: 'Pa', name: 'Protactinium', mass: 231.04, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 20, 9, 2], rarity: 'Rare', discovery: '1913', desc: 'A dense, silvery-gray actinide metal which readily reacts with oxygen, water vapor and inorganic acids.', melting_point: '1841 K', boiling_point: '4300 K', electron_configuration: '[Rn] 5f² 6d¹ 7s²', density: '15.37 g/cm³', discovered_by: 'Kasimir Fajans & Oswald Helmuth Göhring' },
+                { number: 92, symbol: 'U', name: 'Uranium', mass: 238.03, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 21, 9, 2], rarity: 'Uncommon', discovery: '1789', desc: 'A silvery-white metal in the actinide series. All its isotopes are radioactive. Commonly used as fuel in nuclear power plants.', melting_point: '1405.3 K', boiling_point: '4404 K', electron_configuration: '[Rn] 5f³ 6d¹ 7s²', density: '18.95 g/cm³', discovered_by: 'Martin Heinrich Klaproth' },
+                { number: 93, symbol: 'Np', name: 'Neptunium', mass: 237, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 22, 9, 2], rarity: 'Synthetic', discovery: '1940', desc: 'A radioactive actinide metal. It is the first transuranic element.', melting_point: '917 K', boiling_point: '4273 K', electron_configuration: '[Rn] 5f⁴ 6d¹ 7s²', density: '20.45 g/cm³', discovered_by: 'Edwin McMillan & Philip H. Abelson' },
+                { number: 94, symbol: 'Pu', name: 'Plutonium', mass: 244, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 24, 8, 2], rarity: 'Synthetic', discovery: '1940', desc: 'An actinide metal of silvery-gray appearance that tarnishes when exposed to air. Used in nuclear weapons and reactors.', melting_point: '912.5 K', boiling_point: '3501 K', electron_configuration: '[Rn] 5f⁶ 7s²', density: '19.84 g/cm³', discovered_by: 'Glenn T. Seaborg et al.' },
+                { number: 95, symbol: 'Am', name: 'Americium', mass: 243, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 25, 8, 2], rarity: 'Synthetic', discovery: '1944', desc: 'A synthetic radioactive chemical element. It is a transuranic member of the actinide series.', melting_point: '1449 K', boiling_point: '2284 K', electron_configuration: '[Rn] 5f⁷ 7s²', density: '13.69 g/cm³', discovered_by: 'Glenn T. Seaborg et al.' },
+                { number: 96, symbol: 'Cm', name: 'Curium', mass: 247, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 25, 9, 2], rarity: 'Synthetic', discovery: '1944', desc: 'A transuranic radioactive chemical element. It is a hard, dense, silvery metal.', melting_point: '1613 K', boiling_point: '3383 K', electron_configuration: '[Rn] 5f⁷ 6d¹ 7s²', density: '13.51 g/cm³', discovered_by: 'Glenn T. Seaborg et al.' },
+                { number: 97, symbol: 'Bk', name: 'Berkelium', mass: 247, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 27, 8, 2], rarity: 'Synthetic', discovery: '1949', desc: 'A radioactive element and a member of the actinide series. It is a soft, silvery-white metal.', melting_point: '1259 K', boiling_point: '2900 K', electron_configuration: '[Rn] 5f⁹ 7s²', density: '14.79 g/cm³', discovered_by: 'Glenn T. Seaborg et al.' },
+                { number: 98, symbol: 'Cf', name: 'Californium', mass: 251, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 28, 8, 2], rarity: 'Synthetic', discovery: '1950', desc: 'A radioactive metallic chemical element. It is one of the heaviest elements to be produced in weighable amounts.', melting_point: '1173 K', boiling_point: '1743 K', electron_configuration: '[Rn] 5f¹⁰ 7s²', density: '15.1 g/cm³', discovered_by: 'Glenn T. Seaborg et al.' },
+                { number: 99, symbol: 'Es', name: 'Einsteinium', mass: 252, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 29, 8, 2], rarity: 'Synthetic', discovery: '1952', desc: 'A synthetic element named after Albert Einstein. It is a soft, silvery, paramagnetic metal.', melting_point: '1133 K', boiling_point: '1269 K', electron_configuration: '[Rn] 5f¹¹ 7s²', density: '8.84 g/cm³', discovered_by: 'Albert Ghiorso et al.' },
+                { number: 100, symbol: 'Fm', name: 'Fermium', mass: 257, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 30, 8, 2], rarity: 'Synthetic', discovery: '1952', desc: 'A synthetic element named after Enrico Fermi. It is the heaviest element that can be formed by neutron bombardment of lighter elements.', melting_point: '1800 K', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹² 7s²', density: 'N/A', discovered_by: 'Albert Ghiorso et al.' },
+                { number: 101, symbol: 'Md', name: 'Mendelevium', mass: 258, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 31, 8, 2], rarity: 'Synthetic', discovery: '1955', desc: 'A synthetic element named after Dmitri Mendeleev. It can only be produced in particle accelerators.', melting_point: '1100 K', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹³ 7s²', density: 'N/A', discovered_by: 'Albert Ghiorso et al.' },
+                { number: 102, symbol: 'No', name: 'Nobelium', mass: 259, category: 'actinide', group: -1, period: 7, shells: [2, 8, 18, 32, 32, 8, 2], rarity: 'Synthetic', discovery: '1966', desc: 'A synthetic chemical element named after Alfred Nobel. It is a radioactive metal.', melting_point: '1100 K', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 7s²', density: 'N/A', discovered_by: 'Joint Institute for Nuclear Research' },
+                { number: 103, symbol: 'Lr', name: 'Lawrencium', mass: 262, category: 'actinide', group: 3, period: 7, shells: [2, 8, 18, 32, 32, 8, 3], rarity: 'Synthetic', discovery: '1961', desc: 'A synthetic chemical element named in honor of Ernest Lawrence. It is the last member of the actinide series.', melting_point: '1900 K', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 7s² 7p¹', density: 'N/A', discovered_by: 'Albert Ghiorso et al.' },
+                { number: 104, symbol: 'Rf', name: 'Rutherfordium', mass: 267, category: 'transition-metal', group: 4, period: 7, shells: [2, 8, 18, 32, 32, 10, 2], rarity: 'Synthetic', discovery: '1964', desc: 'A synthetic chemical element named after physicist Ernest Rutherford. It is highly radioactive.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d² 7s²', density: 'N/A', discovered_by: 'Joint Institute for Nuclear Research' },
+                { number: 105, symbol: 'Db', name: 'Dubnium', mass: 268, category: 'transition-metal', group: 5, period: 7, shells: [2, 8, 18, 32, 32, 11, 2], rarity: 'Synthetic', discovery: '1968', desc: 'A synthetic chemical element named after the town of Dubna in Russia. All known isotopes are extremely radioactive.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d³ 7s²', density: 'N/A', discovered_by: 'Joint Institute for Nuclear Research' },
+                { number: 106, symbol: 'Sg', name: 'Seaborgium', mass: 271, category: 'transition-metal', group: 6, period: 7, shells: [2, 8, 18, 32, 32, 12, 2], rarity: 'Synthetic', discovery: '1974', desc: 'A synthetic chemical element named after Glenn T. Seaborg. It is a super-heavy element.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d⁴ 7s²', density: 'N/A', discovered_by: 'Albert Ghiorso et al.' },
+                { number: 107, symbol: 'Bh', name: 'Bohrium', mass: 272, category: 'transition-metal', group: 7, period: 7, shells: [2, 8, 18, 32, 32, 13, 2], rarity: 'Synthetic', discovery: '1976', desc: 'A synthetic chemical element named after Danish physicist Niels Bohr. It is extremely unstable.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d⁵ 7s²', density: 'N/A', discovered_by: 'Peter Armbruster, Gottfried Münzenberg, et al.' },
+                { number: 108, symbol: 'Hs', name: 'Hassium', mass: 270, category: 'transition-metal', group: 8, period: 7, shells: [2, 8, 18, 32, 32, 14, 2], rarity: 'Synthetic', discovery: '1984', desc: 'A synthetic element named after the German state of Hesse. It is a super-heavy element.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d⁶ 7s²', density: 'N/A', discovered_by: 'Peter Armbruster, Gottfried Münzenberg, et al.' },
+                { number: 109, symbol: 'Mt', name: 'Meitnerium', mass: 276, category: 'unknown', group: 9, period: 7, shells: [2, 8, 18, 32, 32, 15, 2], rarity: 'Synthetic', discovery: '1982', desc: 'An extremely radioactive synthetic element named after Lise Meitner. Its properties are not well known.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d⁷ 7s²', density: 'N/A', discovered_by: 'Peter Armbruster, Gottfried Münzenberg, et al.' },
+                { number: 110, symbol: 'Ds', name: 'Darmstadtium', mass: 281, category: 'unknown', group: 10, period: 7, shells: [2, 8, 18, 32, 32, 17, 1], rarity: 'Synthetic', discovery: '1994', desc: 'A synthetic chemical element named after the city of Darmstadt, Germany. It is a super-heavy element.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d⁹ 7s¹', density: 'N/A', discovered_by: 'Sigurd Hofmann, Victor Ninov, et al.' },
+                { number: 111, symbol: 'Rg', name: 'Roentgenium', mass: 280, category: 'unknown', group: 11, period: 7, shells: [2, 8, 18, 32, 32, 18, 1], rarity: 'Synthetic', discovery: '1994', desc: 'A synthetic element named after Wilhelm Röntgen. It is extremely radioactive.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d¹⁰ 7s¹', density: 'N/A', discovered_by: 'Sigurd Hofmann, Victor Ninov, et al.' },
+                { number: 112, symbol: 'Cn', name: 'Copernicium', mass: 285, category: 'transition-metal', group: 12, period: 7, shells: [2, 8, 18, 32, 32, 18, 2], rarity: 'Synthetic', discovery: '1996', desc: 'A synthetic chemical element named after Nicolaus Copernicus. It is a super-heavy element.', melting_point: 'N/A', boiling_point: '357 K', electron_configuration: '[Rn] 5f¹⁴ 6d¹⁰ 7s²', density: 'N/A', discovered_by: 'Sigurd Hofmann, Victor Ninov, et al.' },
+                { number: 113, symbol: 'Nh', name: 'Nihonium', mass: 284, category: 'unknown', group: 13, period: 7, shells: [2, 8, 18, 32, 32, 18, 3], rarity: 'Synthetic', discovery: '2003', desc: 'A synthetic chemical element named after Japan (Nihon). It is extremely radioactive.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p¹', density: 'N/A', discovered_by: 'RIKEN' },
+                { number: 114, symbol: 'Fl', name: 'Flerovium', mass: 289, category: 'post-transition-metal', group: 14, period: 7, shells: [2, 8, 18, 32, 32, 18, 4], rarity: 'Synthetic', discovery: '1998', desc: 'A superheavy artificial chemical element named after the Flerov Laboratory of Nuclear Reactions.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p²', density: 'N/A', discovered_by: 'Joint Institute for Nuclear Research' },
+                { number: 115, symbol: 'Mc', name: 'Moscovium', mass: 288, category: 'unknown', group: 15, period: 7, shells: [2, 8, 18, 32, 32, 18, 5], rarity: 'Synthetic', discovery: '2003', desc: 'A synthetic chemical element named for Moscow Oblast, Russia. It is extremely radioactive.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p³', density: 'N/A', discovered_by: 'Joint Institute for Nuclear Research' },
+                { number: 116, symbol: 'Lv', name: 'Livermorium', mass: 293, category: 'unknown', group: 16, period: 7, shells: [2, 8, 18, 32, 32, 18, 6], rarity: 'Synthetic', discovery: '2000', desc: 'A synthetic superheavy element named after the Lawrence Livermore National Laboratory.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁴', density: 'N/A', discovered_by: 'Joint Institute for Nuclear Research' },
+                { number: 117, symbol: 'Ts', name: 'Tennessine', mass: 294, category: 'halogen', group: 17, period: 7, shells: [2, 8, 18, 32, 32, 18, 7], rarity: 'Synthetic', discovery: '2010', desc: 'A synthetic chemical element named after the state of Tennessee. It is the second-heaviest known element.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁵', density: 'N/A', discovered_by: 'Joint Institute for Nuclear Research & Oak Ridge National Laboratory' },
+                { number: 118, symbol: 'Og', name: 'Oganesson', mass: 294, category: 'noble-gas', group: 18, period: 7, shells: [2, 8, 18, 32, 32, 18, 8], rarity: 'Synthetic', discovery: '2002', desc: 'A synthetic chemical element named after Yuri Oganessian. It has the highest atomic number and atomic mass of all known elements.', melting_point: 'N/A', boiling_point: 'N/A', electron_configuration: '[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁶', density: 'N/A', discovered_by: 'Joint Institute for Nuclear Research' }
+            ];
+            
+            const funFacts = [
+                "The only letter not in the periodic table is 'J'.",
+                "Francium is the rarest naturally occurring element on Earth.",
+                "Helium was first discovered on the sun, not on Earth.",
+                "The word 'atom' comes from the Greek for 'uncuttable' or 'indivisible'.",
+                "Oganesson has the highest atomic number of all discovered elements at 118.",
+                "About 20% of the air you breathe is oxygen.",
+                "Glass isn't a solid, but a very slow-moving liquid called an amorphous solid.",
+                "Gold and Copper were the first metals discovered by ancient humans.",
+                "Tungsten has the highest melting point of any metal: 3,422 C (6,192 F).",
+                "The only two non-silvery metals are Gold and Copper."
+            ];
+
+            // Get references to all the DOM elements we'll be using
+            const table = document.getElementById('periodic-table');
+            const modalOverlay = document.getElementById('element-modal');
+            const modalContent = modalOverlay.querySelector('.modal-content');
+            const modalHeader = document.getElementById('modal-header');
+            const closeModalButton = document.getElementById('close-modal-button');
+            const searchInput = document.getElementById('gemini-search-input');
+            const searchBtn = document.getElementById('gemini-search-btn');
+            const searchResponseContainer = document.getElementById('gemini-response-container');
+            const themeSwitchBtn = document.getElementById('theme-switch-btn');
+            const categorySidebar = document.getElementById('category-sidebar');
+            const clockDisplay = document.getElementById('digital-clock');
+            const eotdText = document.getElementById('eotd-text');
+            const tooltip = document.getElementById('tooltip');
+            
+            // Game elements
+            const gameClue = document.getElementById('game-clue');
+            const gameInput = document.getElementById('game-input');
+            const gameResult = document.getElementById('game-result');
+            const gameSubmitBtn = document.getElementById('game-submit-btn');
+            const gameNewBtn = document.getElementById('game-new-btn');
+            let currentGameAnswer = '';
+
+            // Audio gimmick setup
+            let audioCtx;
+            let clickSounds = [];
+            let hoverSound;
+
+            // Atom animation state
+            let animationFrameId;
+            
+            // Konami code state
+            const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+            let konamiIndex = 0;
+
+            // ##########################################
+            // ########### CORE FUNCTIONS ###############
+            // ##########################################
+
+            /**
+             * Initializes the application.
+             */
+            function initialize() {
+                generatePeriodicTable();
+                generateCategoryFilters();
+                setupEventListeners();
+                setupAudio();
+                startMatrixBackground();
+                startFunFactTicker();
+                startClock();
+                setElementOfTheDay();
+                makeModalDraggable();
+                animateElementsIn();
+            }
+
+            /**
+             * Creates and populates the periodic table grid.
+             */
+            function generatePeriodicTable() {
+                table.innerHTML = ''; // Clear existing table
+                const fragment = document.createDocumentFragment();
+
+                elementsData.forEach(elementData => {
+                    const elementDiv = document.createElement('div');
+                    elementDiv.className = `element category-${elementData.category}`;
+                    elementDiv.dataset.number = elementData.number;
+                    elementDiv.dataset.category = elementData.category;
+                    elementDiv.dataset.name = elementData.name;
+                    
+                    if (elementData.category === 'lanthanide') {
+                        elementDiv.style.gridColumn = (elementData.number - 57) + 3;
+                        elementDiv.style.gridRow = 9;
+                    } else if (elementData.category === 'actinide') {
+                        elementDiv.style.gridColumn = (elementData.number - 89) + 3;
+                        elementDiv.style.gridRow = 10;
+                    } else {
+                        elementDiv.style.gridColumn = elementData.group;
+                        elementDiv.style.gridRow = elementData.period;
+                    }
+                    
+                    elementDiv.innerHTML = `
+                        <div class="atomic-number">${elementData.number}</div>
+                        <div class="symbol">${elementData.symbol}</div>
+                    `;
+                    
+                    elementDiv.addEventListener('click', () => showElementDetails(elementData));
+                    fragment.appendChild(elementDiv);
+                });
+                
+                const lanthanideLabel = document.createElement('div');
+                lanthanideLabel.innerHTML = '<span>57-71</span>';
+                lanthanideLabel.className = 'element';
+                lanthanideLabel.style.gridColumn = 3;
+                lanthanideLabel.style.gridRow = 6;
+                fragment.appendChild(lanthanideLabel);
+                
+                const actinideLabel = document.createElement('div');
+                actinideLabel.innerHTML = '<span>89-103</span>';
+                actinideLabel.className = 'element';
+                actinideLabel.style.gridColumn = 3;
+                actinideLabel.style.gridRow = 7;
+                fragment.appendChild(actinideLabel);
+
+                table.appendChild(fragment);
+            }
+
+            /**
+             * Displays the modal with detailed information about a clicked element.
+             * @param {object} el - The element data object.
+             */
+            function showElementDetails(el) {
+                playRandomClickSound();
+                
+                // Reset modal position before showing
+                modalContent.style.top = '';
+                modalContent.style.left = '';
+
+                document.getElementById('modal-element-name').textContent = el.name;
+                document.getElementById('modal-element-category').textContent = capitalizeWords(el.category);
+                document.getElementById('modal-symbol').textContent = el.symbol;
+                document.getElementById('modal-atomic-number').textContent = el.number;
+                document.getElementById('modal-atomic-mass').textContent = `${el.mass}`;
+                document.getElementById('modal-rarity').textContent = el.rarity;
+                document.getElementById('modal-discovery').textContent = el.discovery;
+                document.getElementById('modal-description-text').textContent = el.desc;
+                document.getElementById('modal-wiki-link').href = `https://en.wikipedia.org/wiki/${el.name}`;
+                
+                // Populate new fields
+                document.getElementById('modal-discovered-by').textContent = el.discovered_by || 'N/A';
+                document.getElementById('modal-melting-point').textContent = el.melting_point || 'N/A';
+                document.getElementById('modal-boiling-point').textContent = el.boiling_point || 'N/A';
+                document.getElementById('modal-density').textContent = el.density || 'N/A';
+                document.getElementById('modal-electron-config').textContent = el.electron_configuration || 'N/A';
+
+                modalOverlay.classList.add('visible');
+
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                const canvas = document.getElementById('atom-canvas');
+                drawAtom(canvas, el.shells);
+            }
+
+            /**
+             * Hides the element detail modal.
+             */
+            function hideModal() {
+                modalOverlay.classList.remove('visible');
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            }
+            
+            /**
+             * Handles the AI search functionality.
+             */
+            async function handleGeminiSearch() {
+                const query = searchInput.value.trim();
+                if (!query) {
+                    searchResponseContainer.style.display = 'block';
+                    searchResponseContainer.textContent = 'Please enter a question.';
+                    return;
+                }
+
+                playRandomClickSound();
+                searchResponseContainer.style.display = 'block';
+                searchResponseContainer.innerHTML = '<div class="loader"></div>';
+
+                const prompt = `Based on the following JSON data of chemical elements, answer the user's question. Provide a concise, helpful answer. Question: "${query}". Data: ${JSON.stringify(elementsData)}`;
+                
+                try {
+                    let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; // Platform will provide this
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        searchResponseContainer.textContent = text;
+                    } else {
+                        throw new Error('Invalid response structure from API.');
+                    }
+                } catch (error) {
+                    console.error("Gemini API Error:", error);
+                    searchResponseContainer.textContent = 'Error: Could not retrieve an answer. Please try again later.';
+                }
+            }
+
+
+            // ##########################################
+            // ######## GIMMICK IMPLEMENTATIONS #########
+            // ##########################################
+            
+            /**
+             * Capitalizes the first letter of each word in a string.
+             * @param {string} str - The input string.
+             * @returns {string} The capitalized string.
+             */
+            function capitalizeWords(str) {
+                return str.replace(/-/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            }
+
+            /**
+             * Draws the top-down atom simulation on a canvas.
+             */
+            function drawAtom(canvas, shells) {
+                const ctx = canvas.getContext('2d');
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                let angleOffset = 0;
+
+                function animate() {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, 10, 0, 2 * Math.PI);
+                    ctx.fillStyle = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                    ctx.fill();
+                    ctx.strokeStyle = 'white';
+                    ctx.stroke();
+                    shells.forEach((electronCount, shellIndex) => {
+                        const radius = 25 + shellIndex * 18;
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.setLineDash([2, 3]);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                        for (let i = 0; i < electronCount; i++) {
+                            const angle = (2 * Math.PI / electronCount) * i + angleOffset * (shellIndex % 2 === 0 ? 1 : -1) * 0.5;
+                            const x = centerX + radius * Math.cos(angle);
+                            const y = centerY + radius * Math.sin(angle);
+                            ctx.beginPath();
+                            ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                            ctx.fillStyle = 'white';
+                            ctx.fill();
+                        }
+                    });
+                    angleOffset += 0.01;
+                    animationFrameId = requestAnimationFrame(animate);
+                }
+                animate();
+            }
+
+            /**
+             * Sets up Web Audio API for sound effects.
+             */
+            function setupAudio() {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    hoverSound = () => {
+                        if (!audioCtx) return;
+                        const oscillator = audioCtx.createOscillator();
+                        const gainNode = audioCtx.createGain();
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioCtx.destination);
+                        oscillator.type = 'square';
+                        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
+                        oscillator.start(audioCtx.currentTime);
+                        oscillator.stop(audioCtx.currentTime + 0.2);
+                    };
+                    [330, 440, 550, 660].forEach(freq => {
+                        clickSounds.push(() => {
+                            if (!audioCtx) return;
+                            const oscillator = audioCtx.createOscillator();
+                            const gainNode = audioCtx.createGain();
+                            oscillator.connect(gainNode);
+                            gainNode.connect(audioCtx.destination);
+                            oscillator.type = 'sine';
+                            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+                            oscillator.start(audioCtx.currentTime);
+                            oscillator.stop(audioCtx.currentTime + 0.3);
+                        });
+                    });
+                } catch(e) {
+                    console.error("Web Audio API is not supported.");
+                    hoverSound = () => {};
+                    clickSounds = [() => {}];
+                }
+            }
+            
+            function playHoverSound() { if (hoverSound) hoverSound(); }
+            function playRandomClickSound() {
+                const randomSound = clickSounds[Math.floor(Math.random() * clickSounds.length)];
+                if (randomSound) randomSound();
+            }
+
+            /**
+             * Draws the "Matrix"-style falling text background.
+             */
+            function startMatrixBackground() {
+                const canvas = document.getElementById('matrix-bg');
+                const ctx = canvas.getContext('2d');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                const letters = '01';
+                const fontSize = 14;
+                const columns = canvas.width / fontSize;
+                const drops = Array(Math.floor(columns)).fill(1);
+                function draw() {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent-color');
+                    ctx.font = `${fontSize}px ${getComputedStyle(document.body).getPropertyValue('--font-main')}`;
+                    for (let i = 0; i < drops.length; i++) {
+                        const text = letters[Math.floor(Math.random() * letters.length)];
+                        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                            drops[i] = 0;
+                        }
+                        drops[i]++;
+                    }
+                }
+                setInterval(draw, 45);
+            }
+
+            /**
+             * Cycles through fun facts every 10 seconds.
+             */
+            function startFunFactTicker() {
+                const factText = document.getElementById('fun-fact-text');
+                setInterval(() => {
+                    const randomIndex = Math.floor(Math.random() * funFacts.length);
+                    factText.style.opacity = 0;
+                    setTimeout(() => {
+                        factText.textContent = funFacts[randomIndex];
+                        factText.style.opacity = 1;
+                    }, 500);
+                }, 10000);
+            }
+            
+            /**
+             * Toggles the color theme of the page.
+             */
+            function toggleTheme() {
+                playRandomClickSound();
+                if (document.body.classList.contains('theme-hacker')) {
+                    document.body.classList.remove('theme-hacker');
+                    return;
+                }
+                document.body.classList.toggle('theme-vaporwave');
+            }
+            
+            /**
+             * Starts the digital clock gimmick.
+             */
+            function startClock() {
+                setInterval(() => {
+                    const now = new Date();
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    clockDisplay.textContent = `${hours}:${minutes}:${seconds}`;
+                }, 1000);
+            }
+            
+            /**
+             * Generates the category filter buttons in the sidebar.
+             */
+            function generateCategoryFilters() {
+                const categories = [...new Set(elementsData.map(el => el.category))].filter(c => c !== 'unknown');
+                categories.sort();
+                const allButton = document.createElement('button');
+                allButton.className = 'filter-btn active';
+                allButton.textContent = 'All';
+                allButton.dataset.category = 'all';
+                categorySidebar.appendChild(allButton);
+                categories.forEach(category => {
+                    const button = document.createElement('button');
+                    button.className = 'filter-btn';
+                    button.textContent = capitalizeWords(category);
+                    button.dataset.category = category;
+                    categorySidebar.appendChild(button);
+                });
+            }
+            
+            /**
+             * Handles clicks on category filter buttons.
+             */
+            function handleCategoryFilter(event) {
+                const target = event.target;
+                if (!target.classList.contains('filter-btn')) return;
+                playRandomClickSound();
+                searchInput.value = '';
+                const category = target.dataset.category;
+                const allElements = document.querySelectorAll('.element[data-number]');
+                clearActiveFilters();
+                target.classList.add('active');
+                if (category === 'all') {
+                    allElements.forEach(el => el.classList.remove('faded', 'highlight'));
+                } else {
+                    allElements.forEach(el => {
+                        if (el.dataset.category === category) {
+                            el.classList.remove('faded');
+                            el.classList.add('highlight');
+                        } else {
+                            el.classList.add('faded');
+                            el.classList.remove('highlight');
+                        }
+                    });
+                }
+            }
+            
+            function clearActiveFilters() {
+                document.querySelectorAll('.filter-btn.active').forEach(btn => btn.classList.remove('active'));
+            }
+            
+            /**
+             * Listens for the Konami code sequence.
+             */
+            function handleKonamiCode(e) {
+                if (e.key.toLowerCase() === konamiCode[konamiIndex]) {
+                    konamiIndex++;
+                    if (konamiIndex === konamiCode.length) {
+                        konamiIndex = 0;
+                        activateHackerMode();
+                    }
+                } else {
+                    konamiIndex = 0;
+                }
+            }
+
+            /**
+             * Activates the hacker mode theme as an easter egg.
+             */
+            function activateHackerMode() {
+                document.body.classList.add('theme-hacker');
+                document.body.classList.remove('theme-vaporwave');
+                const funFactText = document.getElementById('fun-fact-text');
+                funFactText.style.opacity = 0;
+                setTimeout(() => {
+                    funFactText.textContent = "KONAMI CODE ACCEPTED. HACKER MODE ENGAGED.";
+                    funFactText.style.opacity = 1;
+                }, 500);
+            }
+            
+            /**
+             * Sets the Element of the Day, persisting for 24 hours.
+             */
+            function setElementOfTheDay() {
+                const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+                const storedData = JSON.parse(localStorage.getItem('elementOfTheDay'));
+
+                let dailyElement;
+
+                if (storedData && storedData.date === today) {
+                    dailyElement = elementsData.find(el => el.number === storedData.elementNumber);
+                } else {
+                    dailyElement = elementsData[Math.floor(Math.random() * elementsData.length)];
+                    localStorage.setItem('elementOfTheDay', JSON.stringify({
+                        date: today,
+                        elementNumber: dailyElement.number
+                    }));
+                }
+                
+                eotdText.innerHTML = `<strong>${dailyElement.name} (${dailyElement.symbol})</strong> - ${dailyElement.desc}`;
+            }
+            
+            /**
+             * Gimmick: Makes the modal draggable by its header.
+             */
+            function makeModalDraggable() {
+                let isDragging = false;
+                let offsetX, offsetY;
+                modalHeader.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    offsetX = e.clientX - modalContent.offsetLeft;
+                    offsetY = e.clientY - modalContent.offsetTop;
+                    modalContent.style.cursor = 'grabbing';
+                });
+                document.addEventListener('mousemove', (e) => {
+                    if (isDragging) {
+                        e.preventDefault();
+                        modalContent.style.left = `${e.clientX - offsetX}px`;
+                        modalContent.style.top = `${e.clientY - offsetY}px`;
+                    }
+                });
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    modalContent.style.cursor = 'grab';
+                });
+            }
+            
+            /**
+             * Gimmick: Animates the elements flying into place on load.
+             */
+            function animateElementsIn() {
+                const elements = document.querySelectorAll('.element');
+                elements.forEach((el, i) => {
+                    setTimeout(() => {
+                        el.classList.add('visible');
+                    }, i * 10); // Stagger the animation
+                });
+            }
+            
+            /**
+             * Gimmick: Guess the Element Game Logic
+             */
+            function startNewGame() {
+                playRandomClickSound();
+                const randomElement = elementsData[Math.floor(Math.random() * elementsData.length)];
+                currentGameAnswer = randomElement.name.toLowerCase();
+                
+                const properties = ['melting_point', 'boiling_point', 'discovery', 'discovered_by', 'rarity'];
+                const randomProp = properties[Math.floor(Math.random() * properties.length)];
+                
+                gameClue.textContent = `Clue: Its ${capitalizeWords(randomProp.replace('_', ' '))} is ${randomElement[randomProp]}`;
+                gameInput.value = '';
+                gameResult.textContent = '\u00A0'; // Non-breaking space
+                gameInput.focus();
+            }
+
+            function checkGameAnswer() {
+                const userAnswer = gameInput.value.trim().toLowerCase();
+                if (userAnswer === currentGameAnswer) {
+                    gameResult.textContent = 'Correct!';
+                    gameResult.style.color = 'var(--accent-color)';
+                    setTimeout(startNewGame, 2000);
+                } else {
+                    gameResult.textContent = 'Try Again!';
+                    gameResult.style.color = 'var(--secondary-color)';
+                }
+            }
+
+            /**
+             * Sets up all the event listeners for the page.
+             */
+            function setupEventListeners() {
+                closeModalButton.addEventListener('click', hideModal);
+                modalOverlay.addEventListener('click', (event) => {
+                    if (event.target === modalOverlay) hideModal();
+                });
+
+                searchBtn.addEventListener('click', handleGeminiSearch);
+                searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') handleGeminiSearch();
+                });
+
+                themeSwitchBtn.addEventListener('click', toggleTheme);
+                categorySidebar.addEventListener('click', handleCategoryFilter);
+
+                document.querySelectorAll('.element[data-number]').forEach(el => {
+                    el.addEventListener('mouseenter', (e) => {
+                        playHoverSound();
+                        tooltip.textContent = el.dataset.name;
+                        tooltip.style.opacity = 1;
+                    });
+                    el.addEventListener('mousemove', (e) => {
+                        tooltip.style.left = `${e.clientX + 15}px`;
+                        tooltip.style.top = `${e.clientY + 15}px`;
+                    });
+                    el.addEventListener('mouseleave', () => {
+                        tooltip.style.opacity = 0;
+                    });
+                });
+
+                window.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' && modalOverlay.classList.contains('visible')) {
+                        hideModal();
+                    }
+                    handleKonamiCode(event);
+                });
+                
+                // Game listeners
+                gameNewBtn.addEventListener('click', startNewGame);
+                gameSubmitBtn.addEventListener('click', checkGameAnswer);
+                gameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') checkGameAnswer();
+                });
+            }
+
+            // Let's get this party started!
+            initialize();
+        });
+    </script>
+</body>
+</html>
